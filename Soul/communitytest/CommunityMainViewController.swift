@@ -16,6 +16,12 @@ class CommunityMainViewController: BaseViewController {
     // 顶部空白区域
     private let topSpacerView = UIView()
     
+    // 动态页面顶部视图
+    private let momentsHeaderView = MomentsHeaderView()
+    
+    // 联系人页面顶部视图
+    private let contactsHeaderView = ContactsHeaderView()
+    
     // Segment Control
     private let segmentControl: BetterSegmentedControl = {
         let segments = LabelSegment.segments(withTitles: ["动态", "联系人"],
@@ -57,7 +63,6 @@ class CommunityMainViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
-        setupUI()
         setupConstraints()
         loadFriends()
     }
@@ -69,11 +74,10 @@ class CommunityMainViewController: BaseViewController {
     
     // MARK: - Setup Methods
     private func setupNavigationBar() {
-        title = "社区"
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        // 添加关闭按钮
-        let closeButton = UIBarButtonItem(title: "关闭", style: .plain, target: self, action: #selector(closeButtonTapped))
+        // 添加箭头返回按钮，不显示文字
+        let closeButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left"), style: .plain, target: self, action: #selector(closeButtonTapped))
         navigationItem.leftBarButtonItem = closeButton
     }
     
@@ -86,6 +90,13 @@ class CommunityMainViewController: BaseViewController {
         
         // 顶部空白区域
         topSpacerView.backgroundColor = .clear
+        
+        // 动态页面顶部视图
+        momentsHeaderView.backgroundColor = .clear
+        
+        // 联系人页面顶部视图
+        contactsHeaderView.backgroundColor = .clear
+        contactsHeaderView.isHidden = true
         
         // Segment Control
         segmentControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
@@ -104,6 +115,8 @@ class CommunityMainViewController: BaseViewController {
         
         // 添加所有子视图
         view.addSubview(topSpacerView)
+        topSpacerView.addSubview(momentsHeaderView)
+        topSpacerView.addSubview(contactsHeaderView)
         view.addSubview(segmentControl)
         view.addSubview(contentContainerView)
         
@@ -117,9 +130,19 @@ class CommunityMainViewController: BaseViewController {
     private func setupConstraints() {
         // 顶部空白区域
         topSpacerView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(200)
+        }
+        
+        // 动态页面顶部视图
+        momentsHeaderView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        // 联系人页面顶部视图
+        contactsHeaderView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
         
         // Segment Control
@@ -161,10 +184,14 @@ class CommunityMainViewController: BaseViewController {
             // 显示动态页面
             momentsView.isHidden = false
             contactsView.isHidden = true
+            momentsHeaderView.isHidden = false
+            contactsHeaderView.isHidden = true
         } else {
             // 显示联系人页面
             momentsView.isHidden = true
             contactsView.isHidden = false
+            momentsHeaderView.isHidden = true
+            contactsHeaderView.isHidden = false
         }
     }
     
