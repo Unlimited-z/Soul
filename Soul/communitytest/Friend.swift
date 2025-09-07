@@ -7,19 +7,26 @@
 
 import Foundation
 
+enum relationship {
+    case hot
+    case normal
+    case defaulted
+}
+
+
 // MARK: - 好友数据模型
 struct Friend {
     let id: String
     let name: String
     let avatar: String
-    let isOnline: Bool
+    let relation: relationship
     let lastSeen: Date?
     
-    init(id: String, name: String, avatar: String, isOnline: Bool = false, lastSeen: Date? = nil) {
+    init(id: String, name: String, avatar: String, relation: relationship = .defaulted, lastSeen: Date? = nil) {
         self.id = id
         self.name = name
         self.avatar = avatar
-        self.isOnline = isOnline
+        self.relation = relation
         self.lastSeen = lastSeen
     }
 }
@@ -48,7 +55,7 @@ class CommunityTestDataManager {
         id: "user_001",
         name: "我",
         avatar: "👤",
-        isOnline: true
+//        isOnline: true
     )
     
     // 好友
@@ -56,7 +63,7 @@ class CommunityTestDataManager {
         id: "user_002",
         name: "小明",
         avatar: "👨‍💻",
-        isOnline: true,
+//        isOnline: true,
         lastSeen: Date()
     )
     

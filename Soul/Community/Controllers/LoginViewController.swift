@@ -31,7 +31,7 @@ class LoginViewController: BaseViewController {
     private lazy var logoImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "heart.circle.fill")
-        imageView.tintColor = AppTheme.Colors.primaryPurple
+        imageView.tintColor = UIColor.systemPurple
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -39,8 +39,8 @@ class LoginViewController: BaseViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Soul"
-        label.font = AppTheme.Typography.largeTitle
-        label.textColor = AppTheme.Colors.primaryText
+        label.font = UIFont.preferredFont(forTextStyle: .title1)
+        label.textColor = UIColor.label 
         label.textAlignment = .center
         return label
     }()
@@ -48,8 +48,8 @@ class LoginViewController: BaseViewController {
     private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "连接心灵，分享生活"
-        label.font = AppTheme.Typography.callout
-        label.textColor = AppTheme.Colors.secondaryText
+        label.font = UIFont.preferredFont(forTextStyle: .callout)
+        label.textColor = UIColor.secondaryLabel
         label.textAlignment = .center
         return label
     }()
@@ -60,7 +60,9 @@ class LoginViewController: BaseViewController {
         textField.keyboardType = .emailAddress
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
-        textField.applyThemeStyle()
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.systemBackground
+        textField.textColor = UIColor.label
         return textField
     }()
     
@@ -68,14 +70,19 @@ class LoginViewController: BaseViewController {
         let textField = UITextField()
         textField.placeholder = "密码"
         textField.isSecureTextEntry = true
-        textField.applyThemeStyle()
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.systemBackground
+        textField.textColor = UIColor.label
         return textField
     }()
     
     private lazy var loginButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("登录", for: .normal)
-        button.applyPrimaryButtonStyle()
+        button.backgroundColor = UIColor.systemBlue
+        button.setTitleColor(UIColor.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -83,8 +90,9 @@ class LoginViewController: BaseViewController {
     private lazy var forgotPasswordButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("忘记密码？", for: .normal)
-        button.applyTextButtonStyle()
-        button.titleLabel?.font = AppTheme.Typography.footnote
+        button.setTitleColor(UIColor.systemBlue, for: .normal)
+        button.backgroundColor = UIColor.clear
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .footnote)
         button.addTarget(self, action: #selector(forgotPasswordButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -92,7 +100,9 @@ class LoginViewController: BaseViewController {
     private lazy var registerButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("还没有账号？立即注册", for: .normal)
-        button.applyTextButtonStyle()
+        button.setTitleColor(UIColor.systemBlue, for: .normal)
+        button.backgroundColor = UIColor.clear
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         button.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -122,10 +132,7 @@ class LoginViewController: BaseViewController {
         setupKeyboardHandling()
         setupTextFieldDelegates()
         
-        // 设置登录按钮渐变背景
-        DispatchQueue.main.async {
-            self.loginButton.applyGradientBackground()
-        }
+
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -135,7 +142,7 @@ class LoginViewController: BaseViewController {
     
     // MARK: - UI Setup
     override func setupUI() {
-//        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemBackground
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)

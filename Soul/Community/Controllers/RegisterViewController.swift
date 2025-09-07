@@ -31,8 +31,8 @@ class RegisterViewController: BaseViewController {
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "创建账号"
-        label.font = AppTheme.Typography.title1
-        label.textColor = AppTheme.Colors.primaryText
+        label.font = UIFont.preferredFont(forTextStyle: .title1)
+        label.textColor = UIColor.label
         label.textAlignment = .center
         return label
     }()
@@ -40,8 +40,8 @@ class RegisterViewController: BaseViewController {
     private lazy var subtitleLabel: UILabel = {
         let label = UILabel()
         label.text = "加入 Soul，开始你的心灵之旅"
-        label.font = AppTheme.Typography.callout
-        label.textColor = AppTheme.Colors.secondaryText
+        label.font = UIFont.preferredFont(forTextStyle: .callout)
+        label.textColor = UIColor.secondaryLabel
         label.textAlignment = .center
         return label
     }()
@@ -51,7 +51,9 @@ class RegisterViewController: BaseViewController {
         textField.placeholder = "昵称（可选）"
         textField.autocapitalizationType = .words
         textField.autocorrectionType = .no
-        textField.applyThemeStyle()
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.systemBackground
+        textField.textColor = UIColor.label
         return textField
     }()
     
@@ -61,7 +63,7 @@ class RegisterViewController: BaseViewController {
         textField.keyboardType = .emailAddress
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
-        textField.applyThemeStyle()
+//        textField.applyThemeStyle()
         return textField
     }()
     
@@ -69,7 +71,7 @@ class RegisterViewController: BaseViewController {
         let textField = UITextField()
         textField.placeholder = "密码（至少6位）"
         textField.isSecureTextEntry = true
-        textField.applyThemeStyle()
+//        textField.applyThemeStyle()
         return textField
     }()
     
@@ -77,14 +79,14 @@ class RegisterViewController: BaseViewController {
         let textField = UITextField()
         textField.placeholder = "确认密码"
         textField.isSecureTextEntry = true
-        textField.applyThemeStyle()
+//        textField.applyThemeStyle()
         return textField
     }()
     
     private lazy var passwordStrengthLabel: UILabel = {
         let label = UILabel()
-        label.font = AppTheme.Typography.caption1
-        label.textColor = AppTheme.Colors.secondaryText
+        label.font = UIFont.preferredFont(forTextStyle: .caption1)
+        label.textColor = UIColor.secondaryLabel
         label.text = "密码强度："
         return label
     }()
@@ -100,7 +102,7 @@ class RegisterViewController: BaseViewController {
         let button = UIButton(type: .custom)
         button.setImage(UIImage(systemName: "square"), for: .normal)
         button.setImage(UIImage(systemName: "checkmark.square.fill"), for: .selected)
-        button.tintColor = AppTheme.Colors.primaryPurple
+        button.tintColor = UIColor.systemPurple
         button.addTarget(self, action: #selector(termsCheckboxTapped), for: .touchUpInside)
         return button
     }()
@@ -108,8 +110,8 @@ class RegisterViewController: BaseViewController {
     private lazy var termsLabel: UILabel = {
         let label = UILabel()
         label.text = "我同意《用户协议》和《隐私政策》"
-        label.font = AppTheme.Typography.footnote
-        label.textColor = AppTheme.Colors.secondaryText
+        label.font = UIFont.preferredFont(forTextStyle: .footnote)
+        label.textColor = UIColor.secondaryLabel
         label.numberOfLines = 0
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(termsLabelTapped))
@@ -122,7 +124,10 @@ class RegisterViewController: BaseViewController {
     private lazy var registerButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("注册", for: .normal)
-        button.applyPrimaryButtonStyle()
+        button.backgroundColor = UIColor.systemBlue
+        button.setTitleColor(UIColor.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
         button.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -130,7 +135,9 @@ class RegisterViewController: BaseViewController {
     private lazy var loginButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("已有账号？立即登录", for: .normal)
-        button.applyTextButtonStyle()
+        button.setTitleColor(UIColor.systemBlue, for: .normal)
+        button.backgroundColor = UIColor.clear
+        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
         button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -161,10 +168,10 @@ class RegisterViewController: BaseViewController {
         setupTextFieldDelegates()
         setupNavigationBar()
         
-        // 设置注册按钮渐变背景
-        DispatchQueue.main.async {
-            self.registerButton.applyGradientBackground()
-        }
+//        // 设置注册按钮渐变背景
+//        DispatchQueue.main.async {
+//            self.registerButton.applyGradientBackground()
+//        }
     }
     
     // MARK: - UI Setup

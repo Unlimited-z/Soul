@@ -22,14 +22,14 @@ class CommunityMainViewController: BaseViewController {
                                            normalFont: UIFont.systemFont(ofSize: 16),
                                            normalTextColor: UIColor.white,
                                            selectedFont: UIFont.systemFont(ofSize: 16, weight: .medium),
-                                           selectedTextColor: AppTheme.Colors.primaryPurple)
+                                           selectedTextColor: AppTheme.Colors.secondaryPurple)
         
         let control = BetterSegmentedControl(
             frame: .zero,
             segments: segments,
             index: 0,
             options: [
-                .backgroundColor(AppTheme.Colors.primaryPurple),
+                .backgroundColor(AppTheme.Colors.secondaryPurple),
                 .indicatorViewBackgroundColor(UIColor.white),
                 .cornerRadius(30),
                 .indicatorViewInset(8),
@@ -48,15 +48,9 @@ class CommunityMainViewController: BaseViewController {
     private let momentsTableView = UITableView()
     
     // 联系人页面
-    private let contactsContainerView = UIView()
-    private let searchContainerView = UIView()
-    private let searchTextField = UITextField()
-    private let searchButton = UIButton(type: .system)
-    private let friendsTableView = UITableView()
+    private let contactsView = ContactsView()
     
     // MARK: - Data
-    private var friends: [Friend] = []
-    private var filteredFriends: [Friend] = []
     private var currentSelectedIndex = 0
     
     // MARK: - Lifecycle
@@ -107,37 +101,10 @@ class CommunityMainViewController: BaseViewController {
         momentsTableView.separatorStyle = .none
         momentsTableView.isScrollEnabled = true
         
-        // 联系人页面容器
-        contactsContainerView.backgroundColor = .clear
-        contactsContainerView.isHidden = true
-        
-        // 搜索区域
-        searchContainerView.backgroundColor = .systemGray6
-        searchContainerView.layer.cornerRadius = 12
-        
-        searchTextField.placeholder = "搜索好友..."
-        searchTextField.borderStyle = .none
-        searchTextField.backgroundColor = .white
-        searchTextField.layer.cornerRadius = 8
-        searchTextField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
-        searchTextField.leftViewMode = .always
-        searchTextField.returnKeyType = .search
-        searchTextField.delegate = self
-        searchTextField.addTarget(self, action: #selector(searchTextChanged), for: .editingChanged)
-        
-        searchButton.setTitle("搜索", for: .normal)
-        searchButton.backgroundColor = .systemBlue
-        searchButton.setTitleColor(.white, for: .normal)
-        searchButton.layer.cornerRadius = 8
-        searchButton.addTarget(self, action: #selector(searchButtonTapped), for: .touchUpInside)
-        
-        // 好友列表
-        friendsTableView.delegate = self
-        friendsTableView.dataSource = self
-        friendsTableView.register(FriendTableViewCell.self, forCellReuseIdentifier: "FriendTableViewCell")
-        friendsTableView.backgroundColor = .clear
-        friendsTableView.separatorStyle = .none
-        friendsTableView.isScrollEnabled = true
+        // 联系人页面
+        contactsView.backgroundColor = .clear
+        contactsView.isHidden = true
+        contactsView.delegate = self
         
         // 添加所有子视图
         view.addSubview(topSpacerView)
@@ -148,11 +115,7 @@ class CommunityMainViewController: BaseViewController {
         contentContainerView.addSubview(momentsTableView)
         
         // 联系人页面
-        contentContainerView.addSubview(contactsContainerView)
-        contactsContainerView.addSubview(searchContainerView)
-        searchContainerView.addSubview(searchTextField)
-        searchContainerView.addSubview(searchButton)
-        contactsContainerView.addSubview(friendsTableView)
+        contentContainerView.addSubview(contactsView)
     }
     
     private func setupConstraints() {
@@ -182,59 +145,16 @@ class CommunityMainViewController: BaseViewController {
             make.edges.equalToSuperview()
         }
         
-        // 联系人页面容器
-        contactsContainerView.snp.makeConstraints { make in
+        // 联系人页面
+        contactsView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-        }
-        
-        // 搜索区域
-        searchContainerView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.height.equalTo(56)
-        }
-        
-        searchTextField.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.trailing.equalTo(searchButton.snp.leading).offset(-12)
-            make.centerY.equalToSuperview()
-            make.height.equalTo(40)
-        }
-        
-        searchButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-            make.width.equalTo(70)
-            make.height.equalTo(40)
-        }
-        
-        // 好友列表
-        friendsTableView.snp.makeConstraints { make in
-            make.top.equalTo(searchContainerView.snp.bottom).offset(20)
-            make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview()
         }
     }
     
     // MARK: - Data Methods
     private func loadFriends() {
-        // 创建测试数据，只显示6个好友对应6张图片
-        friends = [
-            Friend(id: "1", name: "张三", avatar: "avatar2", isOnline: true),
-            Friend(id: "2", name: "李四", avatar: "avatar3", isOnline: false),
-            Friend(id: "3", name: "王五", avatar: "avatar4", isOnline: true),
-            Friend(id: "4", name: "赵六", avatar: "avatar5", isOnline: true),
-            Friend(id: "5", name: "钱七", avatar: "avatar6", isOnline: false),
-            Friend(id: "6", name: "孙八", avatar: "avatar7", isOnline: true)
-        ]
-        filteredFriends = friends
-        updateTableViewHeight()
-        friendsTableView.reloadData()
-    }
-    
-    private func updateTableViewHeight() {
-        // TableView 现在可以自然滚动，不需要手动控制高度
-        friendsTableView.isScrollEnabled = true
+        // 联系人数据现在由ContactsView管理
+        contactsView.reloadData()
     }
     
     private func switchToPage(index: Int) {
@@ -243,98 +163,54 @@ class CommunityMainViewController: BaseViewController {
         if index == 0 {
             // 显示动态页面
             momentsTableView.isHidden = false
-            contactsContainerView.isHidden = true
+            contactsView.isHidden = true
         } else {
             // 显示联系人页面
             momentsTableView.isHidden = true
-            contactsContainerView.isHidden = false
+            contactsView.isHidden = false
         }
-    }
-    
-    private func filterFriends(with searchText: String) {
-        if searchText.isEmpty {
-            filteredFriends = friends
-        } else {
-            filteredFriends = friends.filter { friend in
-                friend.name.lowercased().contains(searchText.lowercased())
-            }
-        }
-        updateTableViewHeight()
-        friendsTableView.reloadData()
     }
     
     // MARK: - Actions
     @objc private func segmentChanged() {
         switchToPage(index: segmentControl.index)
     }
-    
-    @objc private func searchTextChanged() {
-        guard let searchText = searchTextField.text else { return }
-        filterFriends(with: searchText)
-    }
-    
-    @objc private func searchButtonTapped() {
-        searchTextField.resignFirstResponder()
-        guard let searchText = searchTextField.text else { return }
-        filterFriends(with: searchText)
-    }
 }
 
-// MARK: - UITextFieldDelegate
-extension CommunityMainViewController: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        searchButtonTapped()
-        return true
-    }
-}
+
 
 // MARK: - UITableViewDataSource, UITableViewDelegate
 extension CommunityMainViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        if tableView == momentsTableView {
-            return 10 // 模拟10条动态
-        } else {
-            return filteredFriends.count
-        }
+        return 10 // 模拟10条动态
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if tableView == momentsTableView {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "MomentsTableViewCell", for: indexPath) as! MomentsTableViewCell
-            cell.configure(with: indexPath.row)
-            return cell
-        } else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "FriendTableViewCell", for: indexPath) as! FriendTableViewCell
-            let friend = filteredFriends[indexPath.row]
-            cell.configure(with: friend)
-            return cell
-        }
+        let cell = tableView.dequeueReusableCell(withIdentifier: "MomentsTableViewCell", for: indexPath) as! MomentsTableViewCell
+        cell.configure(with: indexPath.row)
+        return cell
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if tableView == momentsTableView {
-            return 120
-        } else {
-            return 70
-        }
+        return 120
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
-        if tableView == friendsTableView {
-            let friend = filteredFriends[indexPath.row]
-            
-            // 跳转到好友的个人资料页面（即之前的 CommunityTestViewController）
-            let profileVC = CommunityTestViewController()
-            profileVC.title = friend.name
-            profileVC.friendImageName = friend.avatar // 传递图片名称
-            let navController = UINavigationController(rootViewController: profileVC)
-            navController.modalPresentationStyle = .fullScreen
-            present(navController, animated: true)
-        }
         // 动态页面的点击事件可以在这里添加
+    }
+}
+
+// MARK: - ContactsViewDelegate
+extension CommunityMainViewController: ContactsViewDelegate {
+    func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend) {
+        // 跳转到好友的个人资料页面（即之前的 CommunityTestViewController）
+        let profileVC = CommunityTestViewController()
+        profileVC.title = friend.name
+        profileVC.friendImageName = friend.avatar // 传递图片名称
+        let navController = UINavigationController(rootViewController: profileVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
 }
 
@@ -415,93 +291,5 @@ class MomentsTableViewCell: UITableViewCell {
         // 设置随机头像颜色
         let colors: [UIColor] = [.systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink]
         avatarImageView.backgroundColor = colors[index % colors.count]
-    }
-}
-
-// MARK: - FriendTableViewCell
-class FriendTableViewCell: UITableViewCell {
-    private let avatarImageView = UIImageView()
-    private let nameLabel = UILabel()
-    private let statusLabel = UILabel()
-    private let arrowImageView = UIImageView()
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupUI()
-        setupConstraints()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        backgroundColor = .clear
-        selectionStyle = .none
-        
-        avatarImageView.backgroundColor = .systemGray5
-        avatarImageView.layer.cornerRadius = 25
-        avatarImageView.clipsToBounds = true
-        avatarImageView.contentMode = .scaleAspectFill
-        
-        nameLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        nameLabel.textColor = .label
-        
-        statusLabel.font = .systemFont(ofSize: 14)
-        statusLabel.textColor = .secondaryLabel
-        
-        arrowImageView.image = UIImage(systemName: "chevron.right")
-        arrowImageView.tintColor = .systemGray3
-        arrowImageView.contentMode = .scaleAspectFit
-        
-        contentView.addSubview(avatarImageView)
-        contentView.addSubview(nameLabel)
-        contentView.addSubview(statusLabel)
-        contentView.addSubview(arrowImageView)
-    }
-    
-    private func setupConstraints() {
-        avatarImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(50)
-        }
-        
-        nameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(avatarImageView.snp.trailing).offset(12)
-            make.top.equalTo(avatarImageView.snp.top).offset(4)
-            make.trailing.equalTo(arrowImageView.snp.leading).offset(-12)
-        }
-        
-        statusLabel.snp.makeConstraints { make in
-            make.leading.equalTo(nameLabel)
-            make.bottom.equalTo(avatarImageView.snp.bottom).offset(-4)
-            make.trailing.equalTo(nameLabel)
-        }
-        
-        arrowImageView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(16)
-        }
-    }
-    
-    func configure(with friend: Friend) {
-        nameLabel.text = friend.name
-        statusLabel.text = friend.isOnline ? "在线" : "离线"
-        statusLabel.textColor = friend.isOnline ? .systemGreen : .systemGray
-        
-        // 设置头像
-        if !friend.avatar.isEmpty, let image = UIImage(named: friend.avatar) {
-            avatarImageView.image = image
-            avatarImageView.contentMode = .scaleAspectFill
-            avatarImageView.clipsToBounds = true
-            avatarImageView.layer.cornerRadius = 25 // 圆形头像
-        } else {
-            avatarImageView.image = UIImage(systemName: "person.circle.fill")
-            avatarImageView.tintColor = friend.isOnline ? .systemBlue : .systemGray
-            avatarImageView.contentMode = .scaleAspectFit
-            avatarImageView.layer.cornerRadius = 0
-        }
     }
 }
