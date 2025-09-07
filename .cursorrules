@@ -1,0 +1,70 @@
+# iOS 开发规范 - SnapKit 布局
+
+## 项目配置
+- 使用 SnapKit 进行所有 UI 布局
+- 优先使用代码布局，避免 Storyboard 复杂布局
+
+## AI 聊天页面开发步骤
+
+### 1. 创建聊天视图控制器
+```swift
+class ChatViewController: UIViewController {
+    // 遵循 SnapKit 布局规范
+}
+```
+
+### 2. 设计主要 UI 组件
+- **消息列表**: UITableView 显示聊天记录
+- **输入区域**: UIView 包含文本输入框和发送按钮
+- **导航栏**: 显示 AI 助手名称和设置按钮
+
+### 3. 创建消息模型
+```swift
+struct ChatMessage {
+    let id: String
+    let content: String
+    let isFromUser: Bool
+    let timestamp: Date
+}
+```
+
+### 4. UI 组件布局步骤
+```swift
+// 使用 SnapKit 创建约束
+private func setupConstraints() {
+    // 消息列表填充大部分区域
+    tableView.snp.makeConstraints { make in
+        make.top.equalTo(view.safeAreaLayoutGuide)
+        make.leading.trailing.equalToSuperview()
+        make.bottom.equalTo(inputContainer.snp.top)
+    }
+    
+    // 输入区域固定在底部
+    inputContainer.snp.makeConstraints { make in
+        make.leading.trailing.equalToSuperview()
+        make.bottom.equalTo(view.safeAreaLayoutGuide)
+        make.height.equalTo(60)
+    }
+}
+```
+
+### 5. 消息气泡设计
+- 用户消息：右对齐，蓝色背景
+- AI 消息：左对齐，灰色背景
+- 使用 UILabel 或 UITextView 显示文本
+- 添加圆角和阴影效果
+
+### 6. 输入功能实现
+- 文本输入框自动调整高度
+- 发送按钮状态管理（空文本时禁用）
+- 键盘弹出时调整布局
+
+### 7. 数据管理
+- 创建消息数组存储聊天记录
+- 实现添加新消息的方法
+- 滚动到最新消息
+
+### 8. AI 接口集成
+- 创建网络请求服务
+- 处理异步响应
+- 错误处理和重试机制
