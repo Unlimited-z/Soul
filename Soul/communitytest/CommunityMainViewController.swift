@@ -45,7 +45,7 @@ class CommunityMainViewController: BaseViewController {
     private let contentContainerView = UIView()
     
     // 动态页面
-    private let momentsTableView = UITableView()
+    private let momentsView = MomentsView()
     
     // 联系人页面
     private let contactsView = ContactsView()
@@ -94,12 +94,8 @@ class CommunityMainViewController: BaseViewController {
         contentContainerView.backgroundColor = .clear
         
         // 动态页面
-        momentsTableView.delegate = self
-        momentsTableView.dataSource = self
-        momentsTableView.register(MomentsTableViewCell.self, forCellReuseIdentifier: "MomentsTableViewCell")
-        momentsTableView.backgroundColor = .clear
-        momentsTableView.separatorStyle = .none
-        momentsTableView.isScrollEnabled = true
+        momentsView.backgroundColor = .clear
+        momentsView.delegate = self
         
         // 联系人页面
         contactsView.backgroundColor = .clear
@@ -112,7 +108,7 @@ class CommunityMainViewController: BaseViewController {
         view.addSubview(contentContainerView)
         
         // 动态页面
-        contentContainerView.addSubview(momentsTableView)
+        contentContainerView.addSubview(momentsView)
         
         // 联系人页面
         contentContainerView.addSubview(contactsView)
@@ -141,7 +137,7 @@ class CommunityMainViewController: BaseViewController {
         }
         
         // 动态页面
-        momentsTableView.snp.makeConstraints { make in
+        momentsView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
@@ -162,11 +158,11 @@ class CommunityMainViewController: BaseViewController {
         
         if index == 0 {
             // 显示动态页面
-            momentsTableView.isHidden = false
+            momentsView.isHidden = false
             contactsView.isHidden = true
         } else {
             // 显示联系人页面
-            momentsTableView.isHidden = true
+            momentsView.isHidden = true
             contactsView.isHidden = false
         }
     }
@@ -179,25 +175,11 @@ class CommunityMainViewController: BaseViewController {
 
 
 
-// MARK: - UITableViewDataSource, UITableViewDelegate
-extension CommunityMainViewController: UITableViewDataSource, UITableViewDelegate {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 10 // 模拟10条动态
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MomentsTableViewCell", for: indexPath) as! MomentsTableViewCell
-        cell.configure(with: indexPath.row)
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 120
-    }
-    
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
+// MARK: - MomentsViewDelegate
+extension CommunityMainViewController: MomentsViewDelegate {
+    func momentsView(_ momentsView: MomentsView, didSelectMomentAt index: Int) {
         // 动态页面的点击事件可以在这里添加
+        print("选中了第\(index + 1)条动态")
     }
 }
 
@@ -211,85 +193,5 @@ extension CommunityMainViewController: ContactsViewDelegate {
         let navController = UINavigationController(rootViewController: profileVC)
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)
-    }
-}
-
-// MARK: - MomentsTableViewCell
-class MomentsTableViewCell: UITableViewCell {
-    private let avatarImageView = UIImageView()
-    private let nameLabel = UILabel()
-    private let contentLabel = UILabel()
-    private let timeLabel = UILabel()
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupUI()
-        setupConstraints()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        backgroundColor = .clear
-        selectionStyle = .none
-        
-        avatarImageView.backgroundColor = .systemGray5
-        avatarImageView.layer.cornerRadius = 20
-        avatarImageView.clipsToBounds = true
-        avatarImageView.contentMode = .scaleAspectFill
-        
-        nameLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        nameLabel.textColor = .label
-        
-        contentLabel.font = .systemFont(ofSize: 14)
-        contentLabel.textColor = .label
-        contentLabel.numberOfLines = 2
-        
-        timeLabel.font = .systemFont(ofSize: 12)
-        timeLabel.textColor = .secondaryLabel
-        
-        contentView.addSubview(avatarImageView)
-        contentView.addSubview(nameLabel)
-        contentView.addSubview(contentLabel)
-        contentView.addSubview(timeLabel)
-    }
-    
-    private func setupConstraints() {
-        avatarImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.top.equalToSuperview().offset(12)
-            make.width.height.equalTo(40)
-        }
-        
-        nameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(avatarImageView.snp.trailing).offset(12)
-            make.top.equalTo(avatarImageView.snp.top)
-            make.trailing.equalToSuperview().offset(-16)
-        }
-        
-        contentLabel.snp.makeConstraints { make in
-            make.leading.equalTo(nameLabel)
-            make.top.equalTo(nameLabel.snp.bottom).offset(8)
-            make.trailing.equalToSuperview().offset(-16)
-        }
-        
-        timeLabel.snp.makeConstraints { make in
-            make.leading.equalTo(nameLabel)
-            make.top.equalTo(contentLabel.snp.bottom).offset(8)
-            make.trailing.equalToSuperview().offset(-16)
-            make.bottom.equalToSuperview().offset(-12)
-        }
-    }
-    
-    func configure(with index: Int) {
-        nameLabel.text = "用户\(index + 1)"
-        contentLabel.text = "这是第\(index + 1)条动态内容，展示朋友圈效果..."
-        timeLabel.text = "\(index + 1)小时前"
-        
-        // 设置随机头像颜色
-        let colors: [UIColor] = [.systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink]
-        avatarImageView.backgroundColor = colors[index % colors.count]
     }
 }
