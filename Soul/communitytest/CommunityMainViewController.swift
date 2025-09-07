@@ -95,7 +95,7 @@ class CommunityMainViewController: BaseViewController {
         
         // 动态页面
         momentsView.backgroundColor = .clear
-        momentsView.delegate = self
+        momentsView.momentsDelegate = self
         
         // 联系人页面
         contactsView.backgroundColor = .clear
@@ -138,7 +138,8 @@ class CommunityMainViewController: BaseViewController {
         
         // 动态页面
         momentsView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.bottom.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(20)
         }
         
         // 联系人页面

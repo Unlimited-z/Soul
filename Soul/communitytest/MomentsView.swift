@@ -14,23 +14,20 @@ protocol MomentsViewDelegate: AnyObject {
 }
 
 // MARK: - MomentsView
-class MomentsView: UIView {
+class MomentsView: UITableView {
     
     // MARK: - Properties
-    weak var delegate: MomentsViewDelegate?
-    
-    // MARK: - UI Components
-    private let tableView = UITableView()
+    weak var momentsDelegate: MomentsViewDelegate?
     
     // MARK: - Data
-    private let momentsCount = 10 // 模拟10条动态
+    private let momentsCount = 3 // 3个cell
     
     // MARK: - Initialization
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    override init(frame: CGRect, style: UITableView.Style) {
+        super.init(frame: frame, style: style)
         setupUI()
-        setupConstraints()
     }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -38,29 +35,16 @@ class MomentsView: UIView {
     
     // MARK: - Setup Methods
     private func setupUI() {
-        backgroundColor = .clear
-        
         // 配置TableView
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.register(MomentsTableViewCell.self, forCellReuseIdentifier: "MomentsTableViewCell")
-        tableView.backgroundColor = .clear
-        tableView.separatorStyle = .none
-        tableView.isScrollEnabled = true
-        
-        addSubview(tableView)
-    }
-    
-    private func setupConstraints() {
-        tableView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-    }
-    
-    // MARK: - Public Methods
-    func reloadData() {
-        tableView.reloadData()
-    }
+        delegate = self
+        dataSource = self
+        register(MomentsTableViewCell.self, forCellReuseIdentifier: "MomentsTableViewCell")
+        // backgroundColor = .systemGroupedBackground
+        separatorStyle = .none
+        isScrollEnabled = true
+//        contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+        rowHeight = UITableView.automaticDimension
+        estimatedRowHeight = 200}
 }
 
 // MARK: - UITableViewDataSource, UITableViewDelegate
@@ -76,21 +60,26 @@ extension MomentsView: UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 120
+        return UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 200
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        delegate?.momentsView(self, didSelectMomentAt: indexPath.row)
+        momentsDelegate?.momentsView(self, didSelectMomentAt: indexPath.row)
     }
+    
+
 }
 
 // MARK: - MomentsTableViewCell
 class MomentsTableViewCell: UITableViewCell {
-    private let avatarImageView = UIImageView()
-    private let nameLabel = UILabel()
-    private let contentLabel = UILabel()
-    private let timeLabel = UILabel()
+    private let topImageView = UIImageView()
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -106,61 +95,93 @@ class MomentsTableViewCell: UITableViewCell {
         backgroundColor = .clear
         selectionStyle = .none
         
-        avatarImageView.backgroundColor = .systemGray5
-        avatarImageView.layer.cornerRadius = 20
-        avatarImageView.clipsToBounds = true
-        avatarImageView.contentMode = .scaleAspectFill
+        // 创建容器视图
+        let containerView = UIView()
+        containerView.backgroundColor = .white
+        containerView.layer.cornerRadius = 12
+        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        containerView.layer.shadowRadius = 4
+        containerView.layer.shadowOpacity = 0.1
         
-        nameLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        nameLabel.textColor = .label
+        contentView.addSubview(containerView)
         
-        contentLabel.font = .systemFont(ofSize: 14)
-        contentLabel.textColor = .label
-        contentLabel.numberOfLines = 2
+        // 设置容器视图约束，上下各留10px间距
+        containerView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(10)
+            make.bottom.equalToSuperview().offset(-10)
+            make.leading.trailing.equalToSuperview()
+        }
         
-        timeLabel.font = .systemFont(ofSize: 12)
-        timeLabel.textColor = .secondaryLabel
+        // 顶部图片配置
+//        topImageView.backgroundColor = .systemGray5
+//        topImageView.layer.cornerRadius = 8
+        topImageView.clipsToBounds = true
+        topImageView.contentMode = .scaleAspectFill
         
-        contentView.addSubview(avatarImageView)
-        contentView.addSubview(nameLabel)
-        contentView.addSubview(contentLabel)
-        contentView.addSubview(timeLabel)
+        // 标题配置
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textColor = .label
+        titleLabel.textAlignment = .left
+        titleLabel.numberOfLines = 0
+        
+        // 副标题配置
+        subtitleLabel.font = .systemFont(ofSize: 14)
+        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.textAlignment = .left
+        subtitleLabel.numberOfLines = 0
+        
+        containerView.addSubview(topImageView)
+        containerView.addSubview(titleLabel)
+        containerView.addSubview(subtitleLabel)
     }
     
     private func setupConstraints() {
-        avatarImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.top.equalToSuperview().offset(12)
-            make.width.height.equalTo(40)
+        // 为contentView添加边距
+//        contentView.snp.makeConstraints { make in
+//            make.top.bottom.equalToSuperview().inset(8)
+//            make.leading.trailing.equalToSuperview().inset(16)
+//        }
+        
+        // 顶部图片 - 居中显示
+        topImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.centerX.equalToSuperview()
+            make.bottom.equalTo(titleLabel.snp.top).offset(-10)
         }
         
-        nameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(avatarImageView.snp.trailing).offset(12)
-            make.top.equalTo(avatarImageView.snp.top)
-            make.trailing.equalToSuperview().offset(-16)
+        // 标题 - 左对齐
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(topImageView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.height.equalTo(30)
         }
         
-        contentLabel.snp.makeConstraints { make in
-            make.leading.equalTo(nameLabel)
-            make.top.equalTo(nameLabel.snp.bottom).offset(8)
-            make.trailing.equalToSuperview().offset(-16)
-        }
-        
-        timeLabel.snp.makeConstraints { make in
-            make.leading.equalTo(nameLabel)
-            make.top.equalTo(contentLabel.snp.bottom).offset(8)
-            make.trailing.equalToSuperview().offset(-16)
-            make.bottom.equalToSuperview().offset(-12)
+        // 副标题 - 左对齐
+        subtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().offset(-16)
         }
     }
     
     func configure(with index: Int) {
-        nameLabel.text = "用户\(index + 1)"
-        contentLabel.text = "这是第\(index + 1)条动态内容，展示朋友圈效果..."
-        timeLabel.text = "\(index + 1)小时前"
+        let titles = [
+            "正念（Mindfulness）疗法",
+            "什么是认知行为疗法（CBT）？",
+            "小行动与心理健康"
+        ]
         
-        // 设置随机头像颜色
-        let colors: [UIColor] = [.systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink]
-        avatarImageView.backgroundColor = colors[index % colors.count]
+        let subtitles = [
+            "核心点：关注当下的感受，接纳自己的情绪而不是抗拒。",
+            "核心点：情绪—思维—行为之间相互影响。",
+            "科学依据：研究表明，完成微小行动能促进多巴胺分泌，带来愉悦感；持续积累有助于形成积极行为习惯。"
+        ]
+        
+        let imageNames = ["cell1", "cell2", "cell3"]
+        
+        titleLabel.text = titles[index]
+        subtitleLabel.text = subtitles[index]
+        topImageView.image = UIImage(named: imageNames[index])
     }
 }
