@@ -29,6 +29,35 @@ class CommunityDetailViewController: BaseViewController {
     // 留言板区域
     private let messageBoardView = MessageBoardView()
     
+    // 输入控件
+    private let inputControlView = InputControlView()
+    
+    // 文本输入相关组件
+    private lazy var inputContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.white
+        view.layer.cornerRadius = 25
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 2)
+        view.layer.shadowRadius = 10
+        view.layer.shadowOpacity = 0.1
+        view.isHidden = true // 初始隐藏
+        return view
+    }()
+    
+    private lazy var textInputView: UITextView = {
+        let textView = UITextView()
+        textView.backgroundColor = UIColor.clear
+        textView.font = UIFont.systemFont(ofSize: 16)
+        textView.textColor = UIColor.label
+        textView.delegate = self
+        textView.isScrollEnabled = false
+        textView.textContainer.lineBreakMode = .byWordWrapping
+        textView.textContainerInset = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        textView.returnKeyType = .send
+        return textView
+    }()
+    
     // MARK: - Initialization
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -45,9 +74,14 @@ class CommunityDetailViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
+        setupUI()
         setupConstraints()
         setupMessageBoardDelegate()
         setupNotifications()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func setupNavigationBar() {
@@ -105,6 +139,14 @@ class CommunityDetailViewController: BaseViewController {
         // 留言板区域
         messageBoardView.backgroundColor = .clear
         
+        // 配置 inputControlView
+        inputControlView.onTextInputTapped = { [weak self] in
+            self?.showTextInput()
+        }
+        inputControlView.onVoiceInputTapped = { [weak self] in
+            print("语音输入功能暂未实现")
+        }
+        
         // 添加所有子视图
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -117,6 +159,18 @@ class CommunityDetailViewController: BaseViewController {
         
         // 添加留言板
         contentView.addSubview(messageBoardView)
+        
+        // 添加输入控件到contentView中
+        contentView.addSubview(inputControlView)
+        view.addSubview(inputContainer)
+        
+        // 配置文本输入容器
+        inputContainer.addSubview(textInputView)
+        
+        // 添加点击空白区域收起键盘的手势
+        let tapGestureToHideKeyboard = UITapGestureRecognizer(target: self, action: #selector(hideKeyboardOnTap))
+        tapGestureToHideKeyboard.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGestureToHideKeyboard)
     }
     
     private func setupConstraints() {
@@ -146,8 +200,26 @@ class CommunityDetailViewController: BaseViewController {
         messageBoardView.snp.makeConstraints { make in
             make.top.equalTo(mainImageView.snp.bottom).offset(24)
             make.leading.trailing.equalToSuperview().inset(20)
-            make.bottom.equalToSuperview().offset(-20)
             make.height.greaterThanOrEqualTo(400)
+        }
+        
+        // InputControlView 约束 - 在留言板下方
+        inputControlView.snp.makeConstraints { make in
+            make.right.equalToSuperview().offset(-16)
+            make.top.equalTo(messageBoardView.snp.bottom).offset(20)
+            make.bottom.equalToSuperview().offset(-20)
+        }
+        
+        // 文本输入容器约束 - 初始位置在屏幕底部
+        inputContainer.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-20)
+            make.height.greaterThanOrEqualTo(50)
+        }
+        
+        // 文本输入框约束
+        textInputView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
     }
     
@@ -174,28 +246,18 @@ class CommunityDetailViewController: BaseViewController {
     // MARK: - Actions
     // MARK: - Keyboard Handling
     @objc private func keyboardWillShow(notification: NSNotification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
-              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let keyboardHeight = keyboardFrame.cgRectValue.height
         
-        let keyboardHeight = keyboardFrame.height
+        // 调整输入容器位置
+        inputContainer.snp.remakeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.equalToSuperview().offset(-keyboardHeight)
+            make.height.greaterThanOrEqualTo(50)
+        }
         
-        // 计算文本框在屏幕中的位置
-        let messageTextField = messageBoardView.getMessageTextField()
-        let textFieldFrame = messageTextField.convert(messageTextField.bounds, to: view)
-        let textFieldBottom = textFieldFrame.maxY
-        
-        // 计算可用高度（屏幕高度减去键盘高度和安全区域）
-        let safeAreaTop = view.safeAreaInsets.top
-        let safeAreaBottom = view.safeAreaInsets.bottom
-        let availableHeight = view.frame.height - keyboardHeight + safeAreaBottom
-        
-        // 如果文本框被键盘遮挡，则向上滚动
-        if textFieldBottom > availableHeight {
-            let scrollOffset = textFieldBottom - availableHeight + 40 // 额外40点间距确保完全可见
-            
-            UIView.animate(withDuration: duration) {
-                self.scrollView.contentOffset = CGPoint(x: 0, y: scrollOffset)
-            }
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
         }
     }
     
@@ -207,11 +269,63 @@ class CommunityDetailViewController: BaseViewController {
         }
     }
     
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
+    
+
     
     // MARK: - Helper Methods
+    
+    // 显示文本输入
+    private func showTextInput() {
+        inputControlView.isHidden = true
+        inputContainer.isHidden = false
+        textInputView.becomeFirstResponder()
+    }
+    
+    // 隐藏文本输入
+    private func hideTextInput() {
+        inputControlView.isHidden = false
+        inputContainer.isHidden = true
+        textInputView.resignFirstResponder()
+        textInputView.text = ""
+    }
+    
+    // 发送消息
+    private func sendMessage() {
+        guard let text = textInputView.text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return
+        }
+        
+        // 创建新消息
+        let newMessage = Message(
+            id: UUID().uuidString,
+            senderId: dataManager.currentUser.id,
+            content: text,
+            timestamp: Date()
+        )
+        
+        // 保存消息到数据管理器
+        dataManager.addMessage(newMessage)
+        
+        // 通过delegate通知消息发送
+        messageBoardView.delegate?.messageBoardView(messageBoardView, didSendMessage: newMessage)
+        
+        // 重新加载留言板数据
+        messageBoardView.loadMessages()
+        
+        // 清空输入框
+        textInputView.text = ""
+        
+        // 隐藏输入界面
+        hideTextInput()
+    }
+    
+    // 点击空白区域隐藏键盘
+    @objc private func hideKeyboardOnTap() {
+        if !inputContainer.isHidden {
+            hideTextInput()
+        }
+    }
+    
     private func getIntimacyText(from relationship: relationship?) -> String? {
         guard let relationship = relationship else { return nil }
         
@@ -236,5 +350,31 @@ extension CommunityDetailViewController: MessageBoardViewDelegate {
     func messageBoardViewDidUpdateHeight(_ view: MessageBoardView) {
         // 留言板高度更新时的处理
         view.layoutIfNeeded()
+    }
+}
+
+// MARK: - UITextViewDelegate
+extension CommunityDetailViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if text == "\n" {
+            // 按下回车键发送消息
+//            sendMessage()
+            return false
+        }
+        return true
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        // 动态调整输入框高度
+        let size = textView.sizeThatFits(CGSize(width: textView.frame.width, height: CGFloat.greatestFiniteMagnitude))
+        let newHeight = max(50, min(120, size.height))
+        
+        inputContainer.snp.updateConstraints { make in
+            make.height.greaterThanOrEqualTo(newHeight)
+        }
+        
+        UIView.animate(withDuration: 0.1) {
+            self.view.layoutIfNeeded()
+        }
     }
 }

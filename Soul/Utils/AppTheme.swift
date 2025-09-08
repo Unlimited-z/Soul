@@ -23,6 +23,8 @@ struct AppTheme {
         static let secondaryPurple = UIColor(hex: "#6E3CF1")
         static let lightPurple = UIColor(hex: "#ECEDFF")
         static let secondaryYellow = UIColor(hex: "#FBF66B")
+        static let primaryYellow = UIColor(hex: "#DAF2B6")
+        
 //        // 辅助颜色
 //        static let accent = UIColor(red: 236/255, green: 72/255, blue: 153/255, alpha: 1.0) // #EC4899
 //        static let warning = UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1.0) // #F59E0B
