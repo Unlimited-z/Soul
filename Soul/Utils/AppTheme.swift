@@ -22,12 +22,12 @@ struct AppTheme {
         static let primaryPurple = UIColor(hex: "#999DF2")
         static let secondaryPurple = UIColor(hex: "#6E3CF1")
         static let lightPurple = UIColor(hex: "#ECEDFF")
-        
-        // 辅助颜色
-        static let accent = UIColor(red: 236/255, green: 72/255, blue: 153/255, alpha: 1.0) // #EC4899
-        static let warning = UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1.0) // #F59E0B
-        static let success = UIColor(red: 34/255, green: 197/255, blue: 94/255, alpha: 1.0) // #22C55E
-        static let error = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1.0) // #EF4444
+        static let secondaryYellow = UIColor(hex: "#FBF66B")
+//        // 辅助颜色
+//        static let accent = UIColor(red: 236/255, green: 72/255, blue: 153/255, alpha: 1.0) // #EC4899
+//        static let warning = UIColor(red: 245/255, green: 158/255, blue: 11/255, alpha: 1.0) // #F59E0B
+//        static let success = UIColor(red: 34/255, green: 197/255, blue: 94/255, alpha: 1.0) // #22C55E
+//        static let error = UIColor(red: 239/255, green: 68/255, blue: 68/255, alpha: 1.0) // #EF4444
         
     }
     

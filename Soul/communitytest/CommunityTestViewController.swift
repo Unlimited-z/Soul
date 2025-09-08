@@ -14,11 +14,17 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     
-    // 图片区域
-    private let imageView = UIImageView()
+    // 好友个人资料栏
+    private let userProfileView = UserProfileView()
+    
+    // 图片区域 (400px高度)
+    private let mainImageView = UIImageView()
     
     // MARK: - Properties
     var friendImageName: String?
+    var friendName: String?
+    var intimacyLevel: relationship?
+    var mainImageName: String? // 主图片名称 (image1-image6)
     
     // 留言板区域
     private let messageboardSectionView = UIView()
@@ -61,16 +67,20 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
-        setupUI()
+//        setupUI()
         setupConstraints()
         loadMessages()
         setupNotifications()
     }
     
     private func setupNavigationBar() {
-        title = "社区"
+        // 创建黑色箭头图标
+        let backImage = UIImage(systemName: "arrow.left")
+        let blackBackImage = backImage?.withTintColor(.black, renderingMode: .alwaysOriginal)
+        
         navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
+            image: blackBackImage,
+            style: .plain,
             target: self,
             action: #selector(closeButtonTapped)
         )
@@ -97,17 +107,22 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.isUserInteractionEnabled = true
-        
+        scrollView.contentInsetAdjustmentBehavior = .never
         contentView.isUserInteractionEnabled = true
         
-        // 配置图片
-        if let imageName = friendImageName, let image = UIImage(named: imageName) {
-            imageView.image = image
-            imageView.contentMode = .scaleAspectFit
+        // 配置好友个人资料栏
+        let intimacyText = getIntimacyText(from: intimacyLevel)
+        userProfileView.configure(avatarImageName: friendImageName, userName: friendName, intimacyLevel: intimacyText)
+        
+        // 配置主图片 (400px高度)
+        mainImageView.contentMode = .scaleAspectFill
+        mainImageView.clipsToBounds = true
+        mainImageView.layer.cornerRadius = 20
+        if let imageName = mainImageName, let image = UIImage(named: imageName) {
+            mainImageView.image = image
         } else {
-            imageView.image = UIImage(systemName: "person.circle.fill")
-            imageView.tintColor = .systemBlue
-            imageView.contentMode = .scaleAspectFit
+            mainImageView.image = UIImage(systemName: "photo")
+            mainImageView.tintColor = .systemGray3
         }
         
         // 留言板区域
@@ -152,7 +167,14 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
         // 添加所有子视图
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
-        contentView.addSubview(imageView)
+        
+        // 添加好友个人资料栏
+        contentView.addSubview(userProfileView)
+        
+        // 添加主图片
+        contentView.addSubview(mainImageView)
+        
+        // 添加留言板
         contentView.addSubview(messageboardSectionView)
         messageboardSectionView.addSubview(messageboardTitleLabel)
         messageboardSectionView.addSubview(messagesCollectionView)
@@ -163,21 +185,30 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
     
     private func setupConstraints() {
         scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
+            make.edges.equalToSuperview()
         }
         
         contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
             make.width.equalToSuperview()
         }
-       // 图片约束
-        imageView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(20)
-            make.centerX.equalToSuperview()
+        
+        // 好友个人资料栏约束
+        userProfileView.snp.makeConstraints { make in
+            make.top.equalTo(44)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.height.equalTo(120)
+        }
+        
+        // 主图片约束 (400px高度)
+        mainImageView.snp.makeConstraints { make in
+            make.top.equalTo(userProfileView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.height.equalTo(400)
         }
         
         messageboardSectionView.snp.makeConstraints { make in
-            make.top.equalTo(imageView.snp.bottom).offset(24)
+            make.top.equalTo(mainImageView.snp.bottom).offset(24)
             make.leading.trailing.equalToSuperview().inset(20)
             make.bottom.equalToSuperview().offset(-20)
             make.height.greaterThanOrEqualTo(400)
@@ -323,6 +354,20 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - Helper Methods
+    private func getIntimacyText(from relationship: relationship?) -> String? {
+        guard let relationship = relationship else { return nil }
+        
+        switch relationship {
+        case .hot:
+            return "至交好友"
+        case .normal:
+            return "普通好友"
+        case .defaulted:
+            return nil // 对于defaulted关系，不显示亲密度文本
+        }
     }
 }
 

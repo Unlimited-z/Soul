@@ -10,7 +10,7 @@ import SnapKit
 
 // MARK: - ContactsViewDelegate
 protocol ContactsViewDelegate: AnyObject {
-    func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend)
+    func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend, at indexPath: IndexPath)
 }
 
 // MARK: - ContactsView
@@ -215,7 +215,7 @@ extension ContactsView: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let friend = filteredFriends[indexPath.row]
-        delegate?.contactsView(self, didSelectFriend: friend)
+        delegate?.contactsView(self, didSelectFriend: friend, at: indexPath)
     }
 }
 
@@ -322,7 +322,7 @@ class FriendTableViewCell: UITableViewCell {
         case .hot:
             statusLabel.text = "至交好友"
         case .normal:
-            statusLabel.text = "put好友"
+            statusLabel.text = "普通好友"
         case .defaulted:
             statusLabel.isHidden = true
         }

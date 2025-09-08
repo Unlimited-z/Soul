@@ -59,6 +59,9 @@ class CommunityMainViewController: BaseViewController {
     // MARK: - Data
     private var currentSelectedIndex = 0
     
+    // 图片数组 (image1 - image6)
+    private let communityImages = ["image1", "image2", "image3", "image4", "image5", "image6"]
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,8 +79,11 @@ class CommunityMainViewController: BaseViewController {
     private func setupNavigationBar() {
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        // 添加箭头返回按钮，不显示文字
-        let closeButton = UIBarButtonItem(image: UIImage(systemName: "arrow.left"), style: .plain, target: self, action: #selector(closeButtonTapped))
+        // 创建黑色箭头图标
+        let backImage = UIImage(systemName: "arrow.left")
+        let blackBackImage = backImage?.withTintColor(.black, renderingMode: .alwaysOriginal)
+        
+        let closeButton = UIBarButtonItem(image: blackBackImage, style: .plain, target: self, action: #selector(closeButtonTapped))
         navigationItem.leftBarButtonItem = closeButton
     }
     
@@ -213,11 +219,17 @@ extension CommunityMainViewController: MomentsViewDelegate {
 
 // MARK: - ContactsViewDelegate
 extension CommunityMainViewController: ContactsViewDelegate {
-    func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend) {
+    func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend, at indexPath: IndexPath) {
         // 跳转到好友的个人资料页面（即之前的 CommunityTestViewController）
         let profileVC = CommunityTestViewController()
-        profileVC.title = friend.name
-        profileVC.friendImageName = friend.avatar // 传递图片名称
+        // 移除标题设置，避免在导航栏显示好友名称
+        profileVC.friendImageName = friend.avatar // 传递头像图片名称
+        profileVC.friendName = friend.name // 传递好友名字
+        profileVC.intimacyLevel = friend.relation // 传递亲密度
+        // 根据点击的cell索引获取对应的主图片 (循环使用image1-image6)
+        let imageIndex = indexPath.row % communityImages.count
+        profileVC.mainImageName = communityImages[imageIndex] // 传递主图片名称
+        
         let navController = UINavigationController(rootViewController: profileVC)
         navController.modalPresentationStyle = .fullScreen
         present(navController, animated: true)
