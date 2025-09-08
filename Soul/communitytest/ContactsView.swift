@@ -130,12 +130,12 @@ class ContactsView: UIView {
     private func loadFriends() {
         // 创建测试数据，只显示6个好友对应6张图片
         friends = [
-            Friend(id: "1", name: "张三", avatar: "avatar2", relation: .hot),
-            Friend(id: "2", name: "李四", avatar: "avatar3", relation: .hot),
-            Friend(id: "3", name: "王五", avatar: "avatar4", relation: .normal),
-            Friend(id: "4", name: "赵六", avatar: "avatar5", relation: .defaulted),
-            Friend(id: "5", name: "钱七", avatar: "avatar6", relation: .defaulted),
-            Friend(id: "6", name: "孙八", avatar: "avatar7", relation: .defaulted)
+            Friend(id: "1", name: "张三", avatar: "avatar2",signature: "世界这么大，快乐要第一时间分享！", relation: .hot),
+            Friend(id: "2", name: "李四", avatar: "avatar3",signature: "永远别停下奔跑的脚步。", relation: .hot),
+            Friend(id: "3", name: "王五", avatar: "avatar4",signature: "脚踏实地，才有资格仰望星空。", relation: .normal),
+            Friend(id: "4", name: "赵六", avatar: "avatar5",signature: "我心里有片海，温柔又澎湃。", relation: .defaulted),
+            Friend(id: "5", name: "钱七", avatar: "avatar6",signature: "所有的热爱都值得被认真看待。", relation: .defaulted),
+            Friend(id: "6", name: "孙八", avatar: "avatar7",signature: "不合群也没关系，我有我的小宇宙。", relation: .defaulted)
         ]
         filteredFriends = friends
         friendsTableView.reloadData()
@@ -341,6 +341,6 @@ class FriendTableViewCell: UITableViewCell {
             avatarImageView.layer.cornerRadius = 0
         }
         
-        messageLabel.text = "消息:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+        messageLabel.text = friend.signature
     }
 }

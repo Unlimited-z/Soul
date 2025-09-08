@@ -19,13 +19,15 @@ struct Friend {
     let id: String
     let name: String
     let avatar: String
+    let signature : String
     let relation: relationship
     let lastSeen: Date?
     
-    init(id: String, name: String, avatar: String, relation: relationship = .defaulted, lastSeen: Date? = nil) {
+    init(id: String, name: String, avatar: String,signature: String, relation: relationship = .defaulted, lastSeen: Date? = nil) {
         self.id = id
         self.name = name
         self.avatar = avatar
+        self.signature = signature
         self.relation = relation
         self.lastSeen = lastSeen
     }
@@ -54,7 +56,7 @@ class CommunityTestDataManager {
     let currentUser = Friend(
         id: "user_001",
         name: "我",
-        avatar: "👤",
+        avatar: "👤", signature: "",
 //        isOnline: true
     )
     
@@ -62,7 +64,7 @@ class CommunityTestDataManager {
     let friend = Friend(
         id: "user_002",
         name: "小明",
-        avatar: "👨‍💻",
+        avatar: "👨‍💻", signature: "",
 //        isOnline: true,
         lastSeen: Date()
     )

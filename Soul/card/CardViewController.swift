@@ -54,7 +54,7 @@ class CardViewController: BaseViewController {
     // ZLSwipeableView相关属性
     private var imageIndex = 0
 //    private var loadCardsFromXib = false
-    private var images = ["image1", "image2", "image3", "image4"]
+    private var images = ["card1", "card2", "card3", "card4","card5","card6","card7"]
     private var generatedImages: [String: UIImage] = [:]
     
     // MARK: - Lifecycle
@@ -181,7 +181,7 @@ class CardViewController: BaseViewController {
         swipeableView.snp.makeConstraints { make in
             make.top.equalTo(segmentedView.snp.bottom).offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
-            make.height.equalTo(300)
+            make.height.equalTo(350)
             make.bottom.equalTo(promptView1.snp.top).offset(-16)
         }
         
@@ -450,7 +450,7 @@ class CardViewController: BaseViewController {
             imageView.image = UIImage(named: imageName)
         }
         
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
         
