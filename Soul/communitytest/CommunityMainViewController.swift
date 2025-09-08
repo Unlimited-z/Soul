@@ -221,7 +221,7 @@ extension CommunityMainViewController: MomentsViewDelegate {
 extension CommunityMainViewController: ContactsViewDelegate {
     func contactsView(_ contactsView: ContactsView, didSelectFriend friend: Friend, at indexPath: IndexPath) {
         // 跳转到好友的个人资料页面（即之前的 CommunityTestViewController）
-        let profileVC = CommunityTestViewController()
+        let profileVC = CommunityDetailViewController()
         // 移除标题设置，避免在导航栏显示好友名称
         profileVC.friendImageName = friend.avatar // 传递头像图片名称
         profileVC.friendName = friend.name // 传递好友名字

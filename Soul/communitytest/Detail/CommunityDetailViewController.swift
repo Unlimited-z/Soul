@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
+class CommunityDetailViewController: BaseViewController, UITextFieldDelegate {
     
     // MARK: - UI Components
     private let scrollView = UIScrollView()
@@ -372,7 +372,7 @@ class CommunityTestViewController: BaseViewController, UITextFieldDelegate {
 }
 
 // MARK: - UITextFieldDelegate
-extension CommunityTestViewController {
+extension CommunityDetailViewController {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         if textField == messageTextField {
             sendButtonTapped()
@@ -396,7 +396,7 @@ extension CommunityTestViewController {
 }
 
 // MARK: - CollectionView DataSource & Delegate
-extension CommunityTestViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+extension CommunityDetailViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return messages.count
     }

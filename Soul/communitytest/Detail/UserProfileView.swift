@@ -62,8 +62,16 @@ class UserProfileView: UIView {
         nameLabel.textColor = AppTheme.Colors.secondaryPurple
         
         // 配置亲密度
-        intimacyLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        intimacyLabel.textColor = .systemGray
+//        intimacyLabel.font = .systemFont(ofSize: 14, weight: .regular)
+//        intimacyLabel.textColor = .systemGray
+        
+        intimacyLabel.font = .systemFont(ofSize: 14)
+        intimacyLabel.textAlignment = .center
+        intimacyLabel.textColor = .white
+        intimacyLabel.backgroundColor = AppTheme.Colors.secondaryPurple
+        intimacyLabel.layer.cornerRadius = 12
+        intimacyLabel.clipsToBounds = true
+        
         
         // 配置性格介绍
         personalityLabel.font = .systemFont(ofSize: 36, weight: .medium)
@@ -95,6 +103,7 @@ class UserProfileView: UIView {
 //            make.leading.equalTo(personalityLabel.snp.trailing).offset(16)
             make.top.equalTo(avatarImageView.snp.top).offset(20)
             make.trailing.equalTo(avatarImageView.snp.leading).offset(-16)
+
         }
         
         // 亲密度在用户名下面
@@ -102,6 +111,8 @@ class UserProfileView: UIView {
 //            make.leading.equalTo(nameLabel)
             make.top.equalTo(nameLabel.snp.bottom).offset(4)
             make.trailing.equalTo(avatarImageView.snp.leading).offset(-16)
+            make.height.equalTo(22)
+            make.width.equalTo(77)
 //            make.bottom.equalToSuperview().offset(-8)
         }
     }
