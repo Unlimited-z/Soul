@@ -4,7 +4,6 @@
 //
 //  Created by Assistant on 2024/01/01.
 //
-//test 
 import UIKit
 import SnapKit
 
@@ -317,6 +316,9 @@ class FriendTableViewCell: UITableViewCell {
 //        statusLabel.text = friend.isOnline ? "在线" : "离线"
 //        statusLabel.textColor = friend.isOnline ? .systemGreen : .systemGray
         let relation = friend.relation
+        
+        // 重置statusLabel的状态，避免cell重用时的显示问题
+        statusLabel.isHidden = false
         
         switch relation {
         case .hot:
