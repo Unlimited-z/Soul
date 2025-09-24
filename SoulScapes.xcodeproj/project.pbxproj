@@ -7,14 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		DF28E4CBCE39624130FAD166 /* Pods_Soul.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F678DD8D4C9DB7E9D77ED5A7 /* Pods_Soul.framework */; };
+		F7796A368731BE408E6E17BD /* Pods_SoulScapes.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3798D78F889EDC8AF8E2090A /* Pods_SoulScapes.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3798D78F889EDC8AF8E2090A /* Pods_SoulScapes.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SoulScapes.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DEAB5B23A26F27696E8106E /* Pods-SoulScapes.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SoulScapes.release.xcconfig"; path = "Target Support Files/Pods-SoulScapes/Pods-SoulScapes.release.xcconfig"; sourceTree = "<group>"; };
 		982E803E2E27DC0800829677 /* SoulScapes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SoulScapes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B8CC5BD6C92067AE456EF251 /* Pods-Soul.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Soul.debug.xcconfig"; path = "Target Support Files/Pods-Soul/Pods-Soul.debug.xcconfig"; sourceTree = "<group>"; };
+		C65D590036BCAFDC80610AD9 /* Pods-SoulScapes.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SoulScapes.debug.xcconfig"; path = "Target Support Files/Pods-SoulScapes/Pods-SoulScapes.debug.xcconfig"; sourceTree = "<group>"; };
 		DBB9E978A404DB3BBD715157 /* Pods-Soul.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Soul.release.xcconfig"; path = "Target Support Files/Pods-Soul/Pods-Soul.release.xcconfig"; sourceTree = "<group>"; };
-		F678DD8D4C9DB7E9D77ED5A7 /* Pods_Soul.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Soul.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -43,7 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF28E4CBCE39624130FAD166 /* Pods_Soul.framework in Frameworks */,
+				F7796A368731BE408E6E17BD /* Pods_SoulScapes.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +55,7 @@
 		573D629608A68D6E408C61C4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				F678DD8D4C9DB7E9D77ED5A7 /* Pods_Soul.framework */,
+				3798D78F889EDC8AF8E2090A /* Pods_SoulScapes.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -81,6 +83,8 @@
 			children = (
 				B8CC5BD6C92067AE456EF251 /* Pods-Soul.debug.xcconfig */,
 				DBB9E978A404DB3BBD715157 /* Pods-Soul.release.xcconfig */,
+				C65D590036BCAFDC80610AD9 /* Pods-SoulScapes.debug.xcconfig */,
+				4DEAB5B23A26F27696E8106E /* Pods-SoulScapes.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -170,7 +174,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Soul-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-SoulScapes-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -183,19 +187,15 @@
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Soul/Pods-Soul-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SoulScapes/Pods-SoulScapes-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Soul/Pods-Soul-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-SoulScapes/Pods-SoulScapes-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Soul/Pods-Soul-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SoulScapes/Pods-SoulScapes-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -213,7 +213,7 @@
 /* Begin XCBuildConfiguration section */
 		982E80522E27DC0900829677 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B8CC5BD6C92067AE456EF251 /* Pods-Soul.debug.xcconfig */;
+			baseConfigurationReference = C65D590036BCAFDC80610AD9 /* Pods-SoulScapes.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -243,7 +243,7 @@
 		};
 		982E80532E27DC0900829677 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = DBB9E978A404DB3BBD715157 /* Pods-Soul.release.xcconfig */;
+			baseConfigurationReference = 4DEAB5B23A26F27696E8106E /* Pods-SoulScapes.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

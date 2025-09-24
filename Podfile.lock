@@ -1442,6 +1442,7 @@ PODS:
   - PromisesObjC (2.4.0)
   - RecaptchaInterop (101.0.0)
   - SnapKit (5.7.1)
+  - SoulNetwork (0.1.0)
   - ZLSwipeableViewSwift (0.0.9)
 
 DEPENDENCIES:
@@ -1453,6 +1454,7 @@ DEPENDENCIES:
   - JXSegmentedView
   - LookinServer
   - SnapKit
+  - SoulNetwork (from `./SoulNetwork`)
   - ZLSwipeableViewSwift
 
 SPEC REPOS:
@@ -1491,6 +1493,10 @@ SPEC REPOS:
     - SnapKit
     - ZLSwipeableViewSwift
 
+EXTERNAL SOURCES:
+  SoulNetwork:
+    :path: "./SoulNetwork"
+
 SPEC CHECKSUMS:
   abseil: a05cc83bf02079535e17169a73c5be5ba47f714b
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
@@ -1524,8 +1530,9 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
   SnapKit: d612e99e678a2d3b95bf60b0705ed0a35c03484a
+  SoulNetwork: 91155d93c70000dcf4bf4852063da859dabd7625
   ZLSwipeableViewSwift: 0d4f2061d36e6daee2b3da8977e0906feee0383d
 
-PODFILE CHECKSUM: 96a3a83226e1e244628ca533d29c58c96cd16c79
+PODFILE CHECKSUM: 62b0b2a3ee1548d2fccbcde4d6421269d797fd39
 
 COCOAPODS: 1.16.2

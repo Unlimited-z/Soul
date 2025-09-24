@@ -1,5 +1,13 @@
+//
+//  ChatViewController.swift
+//  Soul
+//
+//  Created by Ricard.li on 2025/7/16.
+//
+
 import UIKit
 import SnapKit
+import SoulNetwork
 
 class ChatView: UIView {
     
@@ -60,6 +68,7 @@ class ChatView: UIView {
     // MARK: - Data
     private var messages: [ChatMessage] = []
     private var isFirstAIMessage = true // 标识是否是第一条AI消息
+    private var shouldClearOnNextForeground = false // 标识是否需要在下次进入前台时清空对话
     
     // 系统消息配置
     private let systemMessage = """
@@ -77,7 +86,9 @@ class ChatView: UIView {
         super.init(frame: frame)
         setupUI()
         setupConstraints()
-        addKeyboardObservers()
+        addObservers()
+        // 标记需要在下次进入前台时清空对话（应用启动时）
+        shouldClearOnNextForeground = true
         initializeConversationIfNeeded()
     }
     
@@ -85,7 +96,9 @@ class ChatView: UIView {
         super.init(coder: coder)
         setupUI()
         setupConstraints()
-        addKeyboardObservers()
+        addObservers()
+        // 标记需要在下次进入前台时清空对话（应用启动时）
+        shouldClearOnNextForeground = true
         initializeConversationIfNeeded()
     }
     
@@ -207,8 +220,9 @@ class ChatView: UIView {
         }
     }
     
-    // MARK: - Keyboard Handling
-    private func addKeyboardObservers() {
+    // MARK: - Observers
+    private func addObservers() {
+        // 键盘通知
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillShow),
@@ -219,6 +233,20 @@ class ChatView: UIView {
             self,
             selector: #selector(keyboardWillHide),
             name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+        
+        // 应用生命周期通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
     }
@@ -248,6 +276,33 @@ class ChatView: UIView {
         UIView.animate(withDuration: 0.3) {
             self.superview?.layoutIfNeeded()
         }
+    }
+    
+    // MARK: - App Lifecycle Handling
+    @objc private func appDidEnterBackground() {
+        // 应用进入后台时，不需要做任何操作
+        // 用户希望只在应用完整启动时清空对话，而不是每次从后台切换回前台
+    }
+    
+    @objc private func appWillEnterForeground() {
+        // 应用即将进入前台时，检查是否需要清空对话（仅在应用启动时）
+        if shouldClearOnNextForeground {
+            clearConversationAndRestart()
+            shouldClearOnNextForeground = false
+        }
+    }
+    
+    private func clearConversationAndRestart() {
+        // 清空所有数据
+        ChatDataManager.shared.clearAllData()
+        messages.removeAll()
+        isFirstAIMessage = true
+        
+        // 刷新界面
+        tableView.reloadData()
+        
+        // 重新开始对话
+        initiateAIConversation()
     }
     
     // MARK: - Actions

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SoulNetwork
 
 // MARK: - Persistent Chat Message Model
 struct PersistentChatMessage: Codable {

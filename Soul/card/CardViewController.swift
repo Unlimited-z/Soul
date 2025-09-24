@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import JXSegmentedView
 import ZLSwipeableViewSwift
+import SoulNetwork
 
 class CardViewController: BaseViewController {
     

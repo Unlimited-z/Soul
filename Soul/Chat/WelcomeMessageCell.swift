@@ -1,4 +1,5 @@
 import UIKit
+import SoulNetwork
 import SnapKit
 
 class WelcomeMessageCell: UITableViewCell {
