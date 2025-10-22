@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import SoulNetwork
 
 class MenuViewController: BaseViewController {
     
@@ -20,9 +21,13 @@ class MenuViewController: BaseViewController {
             MenuItemModel(title: "设置", icon: "gearshape.fill", type: .settings)
         ]
         
-        // 如果用户已登录，添加退出登录按钮
-        if AuthService.shared.isAuthenticated {
+        // 根据登录状态显示不同的菜单项
+        if AuthServiceManager.shared.isAuthenticated {
+            // 如果用户已登录，添加退出登录按钮
             items.append(MenuItemModel(title: "退出登录", icon: "rectangle.portrait.and.arrow.right", type: .logout))
+        } else {
+            // 如果用户未登录，添加登录主页按钮
+            items.append(MenuItemModel(title: "登录", icon: "person.crop.circle.badge.plus", type: .login))
         }
         
         return items
@@ -61,6 +66,11 @@ class MenuViewController: BaseViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNotificationObservers()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -103,13 +113,42 @@ class MenuViewController: BaseViewController {
         }
     }
     
+    // MARK: - Setup
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLoginStateChange),
+            name: .userDidLogin,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLoginStateChange),
+            name: .userDidLogout,
+            object: nil
+        )
+    }
+    
     // MARK: - Actions
     @objc private func closeButtonTapped() {
         dismiss(animated: true)
     }
     
+    @objc private func handleLoginStateChange() {
+        DispatchQueue.main.async { [weak self] in
+            self?.tableView.reloadData()
+        }
+    }
+    
     private func handleMenuItemTap(_ type: MenuItemType) {
         switch type {
+        case .login:
+            // 显示登录页面
+            let loginVC = LoginViewController()
+            let navController = UINavigationController(rootViewController: loginVC)
+            navController.modalPresentationStyle = .fullScreen
+            present(navController, animated: true)
         case .community:
             // 显示社区主页面
             let communityVC = CommunityMainViewController()
@@ -212,7 +251,7 @@ class MenuViewController: BaseViewController {
     
     private func performLogout() {
         do {
-            try AuthService.shared.signOut()
+            try AuthServiceManager.shared.signOut()
             
             // 退出登录成功，刷新菜单项
             DispatchQueue.main.async { [weak self] in
@@ -282,6 +321,7 @@ struct MenuItemModel {
 }
 
 enum MenuItemType {
+    case login
     case community
     case profile
     case chatHistory

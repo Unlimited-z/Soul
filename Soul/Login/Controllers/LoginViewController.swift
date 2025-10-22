@@ -6,14 +6,21 @@
 //
 
 import UIKit
-import Combine
+import RxSwift
+import RxCocoa
 import SnapKit
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let userDidLogin = Notification.Name("userDidLogin")
+    static let userDidLogout = Notification.Name("userDidLogout")
+}
 
 class LoginViewController: BaseViewController {
     
     // MARK: - Properties
-    private let authService: AuthServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private let viewModel: LoginViewModelProtocol
+    private let disposeBag = DisposeBag()
     
     // MARK: - UI Components
     private lazy var scrollView: UIScrollView = {
@@ -54,10 +61,9 @@ class LoginViewController: BaseViewController {
         return label
     }()
     
-    private lazy var emailTextField: UITextField = {
+    private lazy var usernameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "邮箱地址"
-        textField.keyboardType = .emailAddress
+        textField.placeholder = "用户名"
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
         textField.borderStyle = .roundedRect
@@ -83,7 +89,6 @@ class LoginViewController: BaseViewController {
         button.setTitleColor(UIColor.white, for: .normal)
         button.layer.cornerRadius = 8
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
-        button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -114,13 +119,13 @@ class LoginViewController: BaseViewController {
     }()
     
     // MARK: - Initialization
-    init(authService: AuthServiceProtocol = AuthService.shared) {
-        self.authService = authService
+    init(viewModel: LoginViewModelProtocol = LoginViewModel()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
-        self.authService = AuthService.shared
+        self.viewModel = LoginViewModel()
         super.init(coder: coder)
     }
     
@@ -131,8 +136,7 @@ class LoginViewController: BaseViewController {
         setupConstraints()
         setupKeyboardHandling()
         setupTextFieldDelegates()
-        
-
+        setupBindings()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -150,7 +154,7 @@ class LoginViewController: BaseViewController {
         contentView.addSubview(logoImageView)
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
-        contentView.addSubview(emailTextField)
+        contentView.addSubview(usernameTextField)
         contentView.addSubview(passwordTextField)
         contentView.addSubview(loginButton)
         contentView.addSubview(forgotPasswordButton)
@@ -184,14 +188,14 @@ class LoginViewController: BaseViewController {
             make.centerX.equalToSuperview()
         }
         
-        emailTextField.snp.makeConstraints { make in
+        usernameTextField.snp.makeConstraints { make in
             make.top.equalTo(subtitleLabel.snp.bottom).offset(60)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
         }
         
         passwordTextField.snp.makeConstraints { make in
-            make.top.equalTo(emailTextField.snp.bottom).offset(16)
+            make.top.equalTo(usernameTextField.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
         }
@@ -219,54 +223,82 @@ class LoginViewController: BaseViewController {
     }
     
     private func setupKeyboardHandling() {
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
-            .sink { [weak self] notification in
+        NotificationCenter.default.rx
+            .notification(UIResponder.keyboardWillShowNotification)
+            .subscribe(onNext: { [weak self] notification in
                 self?.handleKeyboardShow(notification)
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
         
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
-            .sink { [weak self] notification in
+        NotificationCenter.default.rx
+            .notification(UIResponder.keyboardWillHideNotification)
+            .subscribe(onNext: { [weak self] notification in
                 self?.handleKeyboardHide(notification)
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
     }
     
     private func setupTextFieldDelegates() {
-        emailTextField.delegate = self
+        usernameTextField.delegate = self
         passwordTextField.delegate = self
+    }
+    
+    private func setupBindings() {
+        // 绑定输入
+        usernameTextField.rx.text.orEmpty
+            .bind(to: viewModel.username)
+            .disposed(by: disposeBag)
         
-        emailTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        passwordTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        passwordTextField.rx.text.orEmpty
+            .bind(to: viewModel.password)
+            .disposed(by: disposeBag)
+        
+        // 绑定登录按钮点击
+        loginButton.rx.tap
+            .bind(to: viewModel.loginTrigger)
+            .disposed(by: disposeBag)
+        
+        // 绑定输出
+        viewModel.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.setLoading(isLoading)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.isLoginEnabled
+            .drive(loginButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+        
+        viewModel.isLoginEnabled
+            .map { $0 ? 1.0 : 0.6 }
+            .drive(loginButton.rx.alpha)
+            .disposed(by: disposeBag)
+        
+        viewModel.loginResult
+            .drive(onNext: { [weak self] result in
+                self?.handleLoginResult(result)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.errorMessage
+            .compactMap { $0 }
+            .drive(onNext: { [weak self] errorMessage in
+                self?.showAlert(title: "登录失败", message: errorMessage)
+            })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Actions
-    @objc private func loginButtonTapped() {
-        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let password = passwordTextField.text else {
-            showAlert(title: "错误", message: "请填写完整信息")
-            return
-        }
-        
-        let credentials = LoginCredentials(email: email, password: password)
-        performLogin(with: credentials)
-    }
-    
     @objc private func forgotPasswordButtonTapped() {
-        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !email.isEmpty else {
-            showAlert(title: "提示", message: "请先输入邮箱地址")
-            return
-        }
-        
-        performPasswordReset(email: email)
+        // 暂时显示提示信息
+        showAlert(title: "提示", message: "密码重置功能暂未实现，请联系客服")
     }
     
     @objc private func registerButtonTapped() {
-        let registerVC = RegisterViewController(authService: authService)
+        let registerVC = RegisterViewController()
         navigationController?.pushViewController(registerVC, animated: true)
     }
     
@@ -274,69 +306,30 @@ class LoginViewController: BaseViewController {
         view.endEditing(true)
     }
     
-    @objc private func textFieldDidChange() {
-        updateLoginButtonState()
-    }
-    
     // MARK: - Private Methods
-    private func performLogin(with credentials: LoginCredentials) {
-        setLoading(true)
-        
-        Task {
-            do {
-                let result = try await authService.signIn(with: credentials)
-                await MainActor.run {
-                    setLoading(false)
-                    handleLoginSuccess(result)
-                }
-            } catch {
-                await MainActor.run {
-                    setLoading(false)
-                    handleLoginError(error)
-                }
+    private func handleLoginResult(_ result: LoginResult) {
+        switch result {
+        case .success(let message):
+            // 登录成功，发送通知
+            NotificationCenter.default.post(name: .userDidLogin, object: nil)
+            
+            // 返回到主界面
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first {
+                // 这里应该设置主界面的根视图控制器
+                // 暂时先dismiss当前界面
+                dismiss(animated: true)
             }
-        }
-    }
-    
-    private func performPasswordReset(email: String) {
-        setLoading(true)
-        
-        Task {
-            do {
-                try await authService.sendPasswordReset(to: email)
-                await MainActor.run {
-                    setLoading(false)
-                    showAlert(title: "成功", message: "密码重置邮件已发送，请检查您的邮箱")
-                }
-            } catch {
-                await MainActor.run {
-                    setLoading(false)
-                    handleLoginError(error)
-                }
+            
+            if let message = message {
+                showAlert(title: "登录成功", message: message)
             }
+        case .failure(let errorMessage):
+            showAlert(title: "登录失败", message: errorMessage)
         }
-    }
-    
-    private func handleLoginSuccess(_ result: AuthResult) {
-        // 登录成功，通知代理或发送通知
-        NotificationCenter.default.post(name: .userDidLogin, object: result.user)
-        
-        // 返回到主界面
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            // 这里应该设置主界面的根视图控制器
-            // 暂时先dismiss当前界面
-            dismiss(animated: true)
-        }
-    }
-    
-    private func handleLoginError(_ error: Error) {
-        let authError = error as? AuthError ?? .unknown(error.localizedDescription)
-        showAlert(title: "登录失败", message: authError.localizedDescription ?? "未知错误")
     }
     
     private func setLoading(_ isLoading: Bool) {
-        loginButton.isEnabled = !isLoading
         loginButton.setTitle(isLoading ? "" : "登录", for: .normal)
         
         if isLoading {
@@ -345,18 +338,10 @@ class LoginViewController: BaseViewController {
             loadingIndicator.stopAnimating()
         }
         
-        emailTextField.isEnabled = !isLoading
+        usernameTextField.isEnabled = !isLoading
         passwordTextField.isEnabled = !isLoading
         forgotPasswordButton.isEnabled = !isLoading
         registerButton.isEnabled = !isLoading
-    }
-    
-    private func updateLoginButtonState() {
-        let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let password = passwordTextField.text ?? ""
-        
-        let isValid = !email.isEmpty && !password.isEmpty
-        loginButton.alpha = isValid ? 1.0 : 0.6
     }
     
     private func handleKeyboardShow(_ notification: Notification) {
@@ -394,11 +379,12 @@ class LoginViewController: BaseViewController {
 // MARK: - UITextFieldDelegate
 extension LoginViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        if textField == emailTextField {
+        if textField == usernameTextField {
             passwordTextField.becomeFirstResponder()
         } else if textField == passwordTextField {
             textField.resignFirstResponder()
-            loginButtonTapped()
+            // 触发登录
+            viewModel.loginTrigger.accept(())
         }
         return true
     }

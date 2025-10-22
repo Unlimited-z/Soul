@@ -6,14 +6,15 @@
 //
 
 import UIKit
-import Combine
+import RxSwift
+import RxCocoa
 import SnapKit
 
 class RegisterViewController: BaseViewController {
     
     // MARK: - Properties
-    private let authService: AuthServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private let viewModel: RegisterViewModelProtocol
+    private let disposeBag = DisposeBag()
     
     // MARK: - UI Components
     private lazy var scrollView: UIScrollView = {
@@ -46,10 +47,10 @@ class RegisterViewController: BaseViewController {
         return label
     }()
     
-    private lazy var displayNameTextField: UITextField = {
+    private lazy var usernameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "昵称（可选）"
-        textField.autocapitalizationType = .words
+        textField.placeholder = "用户名"
+        textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
         textField.borderStyle = .roundedRect
         textField.backgroundColor = UIColor.systemBackground
@@ -57,69 +58,28 @@ class RegisterViewController: BaseViewController {
         return textField
     }()
     
-    private lazy var emailTextField: UITextField = {
-        let textField = UITextField()
-        textField.placeholder = "邮箱地址"
-        textField.keyboardType = .emailAddress
-        textField.autocapitalizationType = .none
-        textField.autocorrectionType = .no
-//        textField.applyThemeStyle()
-        return textField
-    }()
-    
     private lazy var passwordTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "密码（至少6位）"
         textField.isSecureTextEntry = true
-//        textField.applyThemeStyle()
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.systemBackground
+        textField.textColor = UIColor.label
         return textField
     }()
     
-    private lazy var confirmPasswordTextField: UITextField = {
+    private lazy var nicknameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "确认密码"
-        textField.isSecureTextEntry = true
-//        textField.applyThemeStyle()
+        textField.placeholder = "昵称"
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor.systemBackground
+        textField.textColor = UIColor.label
         return textField
     }()
     
-    private lazy var passwordStrengthLabel: UILabel = {
-        let label = UILabel()
-        label.font = UIFont.preferredFont(forTextStyle: .caption1)
-        label.textColor = UIColor.secondaryLabel
-        label.text = "密码强度："
-        return label
-    }()
-    
-    private lazy var passwordStrengthIndicator: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray5
-        view.layer.cornerRadius = 2
-        return view
-    }()
-    
-    private lazy var termsCheckbox: UIButton = {
-        let button = UIButton(type: .custom)
-        button.setImage(UIImage(systemName: "square"), for: .normal)
-        button.setImage(UIImage(systemName: "checkmark.square.fill"), for: .selected)
-        button.tintColor = UIColor.systemPurple
-        button.addTarget(self, action: #selector(termsCheckboxTapped), for: .touchUpInside)
-        return button
-    }()
-    
-    private lazy var termsLabel: UILabel = {
-        let label = UILabel()
-        label.text = "我同意《用户协议》和《隐私政策》"
-        label.font = UIFont.preferredFont(forTextStyle: .footnote)
-        label.textColor = UIColor.secondaryLabel
-        label.numberOfLines = 0
-        
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(termsLabelTapped))
-        label.addGestureRecognizer(tapGesture)
-        label.isUserInteractionEnabled = true
-        
-        return label
-    }()
+
     
     private lazy var registerButton: UIButton = {
         let button = UIButton(type: .system)
@@ -128,9 +88,10 @@ class RegisterViewController: BaseViewController {
         button.setTitleColor(UIColor.white, for: .normal)
         button.layer.cornerRadius = 8
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
-        button.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
         return button
     }()
+    
+
     
     private lazy var loginButton: UIButton = {
         let button = UIButton(type: .system)
@@ -138,7 +99,6 @@ class RegisterViewController: BaseViewController {
         button.setTitleColor(UIColor.systemBlue, for: .normal)
         button.backgroundColor = UIColor.clear
         button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-        button.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
         return button
     }()
     
@@ -149,13 +109,13 @@ class RegisterViewController: BaseViewController {
     }()
     
     // MARK: - Initialization
-    init(authService: AuthServiceProtocol = AuthService.shared) {
-        self.authService = authService
+    init(viewModel: RegisterViewModelProtocol = RegisterViewModel()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
-        self.authService = AuthService.shared
+        self.viewModel = RegisterViewModel()
         super.init(coder: coder)
     }
     
@@ -167,6 +127,7 @@ class RegisterViewController: BaseViewController {
         setupKeyboardHandling()
         setupTextFieldDelegates()
         setupNavigationBar()
+        setupBindings()
         
 //        // 设置注册按钮渐变背景
 //        DispatchQueue.main.async {
@@ -183,14 +144,9 @@ class RegisterViewController: BaseViewController {
         
         contentView.addSubview(titleLabel)
         contentView.addSubview(subtitleLabel)
-        contentView.addSubview(displayNameTextField)
-        contentView.addSubview(emailTextField)
+        contentView.addSubview(usernameTextField)
         contentView.addSubview(passwordTextField)
-        contentView.addSubview(confirmPasswordTextField)
-        contentView.addSubview(passwordStrengthLabel)
-        contentView.addSubview(passwordStrengthIndicator)
-        contentView.addSubview(termsCheckbox)
-        contentView.addSubview(termsLabel)
+        contentView.addSubview(nicknameTextField)
         contentView.addSubview(registerButton)
         contentView.addSubview(loginButton)
         contentView.addSubview(loadingIndicator)
@@ -201,9 +157,13 @@ class RegisterViewController: BaseViewController {
             make.edges.equalTo(view.safeAreaLayoutGuide)
         }
         
+        // 使用 UIScrollView 的 contentLayoutGuide / frameLayoutGuide，避免布局冲突导致崩溃
         contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.width.equalToSuperview()
+            make.top.equalTo(scrollView.contentLayoutGuide.snp.top)
+            make.leading.equalTo(scrollView.contentLayoutGuide.snp.leading)
+            make.trailing.equalTo(scrollView.contentLayoutGuide.snp.trailing)
+            make.bottom.equalTo(scrollView.contentLayoutGuide.snp.bottom)
+            make.width.equalTo(scrollView.frameLayoutGuide.snp.width)
         }
         
         titleLabel.snp.makeConstraints { make in
@@ -216,56 +176,26 @@ class RegisterViewController: BaseViewController {
             make.centerX.equalToSuperview()
         }
         
-        displayNameTextField.snp.makeConstraints { make in
+        usernameTextField.snp.makeConstraints { make in
             make.top.equalTo(subtitleLabel.snp.bottom).offset(40)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
         }
         
-        emailTextField.snp.makeConstraints { make in
-            make.top.equalTo(displayNameTextField.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(32)
-            make.height.equalTo(50)
-        }
-        
         passwordTextField.snp.makeConstraints { make in
-            make.top.equalTo(emailTextField.snp.bottom).offset(16)
+            make.top.equalTo(usernameTextField.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
         }
         
-        passwordStrengthLabel.snp.makeConstraints { make in
-            make.top.equalTo(passwordTextField.snp.bottom).offset(8)
-            make.leading.equalToSuperview().inset(32)
-        }
-        
-        passwordStrengthIndicator.snp.makeConstraints { make in
-            make.centerY.equalTo(passwordStrengthLabel)
-            make.leading.equalTo(passwordStrengthLabel.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().inset(32)
-            make.height.equalTo(4)
-        }
-        
-        confirmPasswordTextField.snp.makeConstraints { make in
-            make.top.equalTo(passwordStrengthLabel.snp.bottom).offset(16)
+        nicknameTextField.snp.makeConstraints { make in
+            make.top.equalTo(passwordTextField.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
-        }
-        
-        termsCheckbox.snp.makeConstraints { make in
-            make.top.equalTo(confirmPasswordTextField.snp.bottom).offset(24)
-            make.leading.equalToSuperview().inset(32)
-            make.width.height.equalTo(24)
-        }
-        
-        termsLabel.snp.makeConstraints { make in
-            make.centerY.equalTo(termsCheckbox)
-            make.leading.equalTo(termsCheckbox.snp.trailing).offset(8)
-            make.trailing.equalToSuperview().inset(32)
         }
         
         registerButton.snp.makeConstraints { make in
-            make.top.equalTo(termsLabel.snp.bottom).offset(32)
+            make.top.equalTo(nicknameTextField.snp.bottom).offset(32)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(50)
         }
@@ -273,7 +203,8 @@ class RegisterViewController: BaseViewController {
         loginButton.snp.makeConstraints { make in
             make.top.equalTo(registerButton.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-40)
+            // 将内容视图的底部与最后一个元素关联，正确计算滚动内容高度
+            make.bottom.equalTo(contentView.snp.bottom).offset(-40)
         }
         
         loadingIndicator.snp.makeConstraints { make in
@@ -291,134 +222,114 @@ class RegisterViewController: BaseViewController {
     }
     
     private func setupKeyboardHandling() {
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
-            .sink { [weak self] notification in
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillShowNotification)
+            .subscribe(onNext: { [weak self] notification in
                 self?.handleKeyboardShow(notification)
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
         
-        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
-            .sink { [weak self] notification in
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillHideNotification)
+            .subscribe(onNext: { [weak self] notification in
                 self?.handleKeyboardHide(notification)
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
     }
     
     private func setupTextFieldDelegates() {
-        displayNameTextField.delegate = self
-        emailTextField.delegate = self
+        usernameTextField.delegate = self
         passwordTextField.delegate = self
-        confirmPasswordTextField.delegate = self
+        nicknameTextField.delegate = self
+    }
+    
+    private func setupBindings() {
+        // 输入绑定
+        usernameTextField.rx.text.orEmpty
+            .bind(to: viewModel.username)
+            .disposed(by: disposeBag)
         
-        passwordTextField.addTarget(self, action: #selector(passwordDidChange), for: .editingChanged)
-        confirmPasswordTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        emailTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        passwordTextField.rx.text.orEmpty
+            .bind(to: viewModel.password)
+            .disposed(by: disposeBag)
+        
+        nicknameTextField.rx.text.orEmpty
+            .bind(to: viewModel.nickname)
+            .disposed(by: disposeBag)
+        
+        registerButton.rx.tap
+            .bind(to: viewModel.registerTrigger)
+            .disposed(by: disposeBag)
+        
+        loginButton.rx.tap
+            .subscribe(onNext: { [weak self] in
+                self?.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+        
+        // 输出绑定
+        viewModel.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.setLoading(isLoading)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.isRegisterEnabled
+            .drive(registerButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+        
+        viewModel.registerResult
+            .drive(onNext: { [weak self] result in
+                self?.handleRegisterResult(result)
+            })
+            .disposed(by: disposeBag)
+        
+        viewModel.errorMessage
+            .drive(onNext: { [weak self] error in
+                if let error = error {
+                    self?.showAlert(title: "注册失败", message: error)
+                }
+            })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Actions
-    @objc private func registerButtonTapped() {
-        guard let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let password = passwordTextField.text,
-              let confirmPassword = confirmPasswordTextField.text else {
-            showAlert(title: "错误", message: "请填写完整信息")
-            return
-        }
-        
-        guard termsCheckbox.isSelected else {
-            showAlert(title: "提示", message: "请同意用户协议和隐私政策")
-            return
-        }
-        
-        let displayName = displayNameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let credentials = RegisterCredentials(
-            email: email,
-            password: password,
-            confirmPassword: confirmPassword,
-            displayName: displayName?.isEmpty == true ? nil : displayName
-        )
-        
-        performRegistration(with: credentials)
-    }
-    
-    @objc private func loginButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
-    
     @objc private func backButtonTapped() {
         navigationController?.popViewController(animated: true)
     }
     
-    @objc private func termsCheckboxTapped() {
-        termsCheckbox.isSelected.toggle()
-        updateRegisterButtonState()
-    }
-    
-    @objc private func termsLabelTapped() {
-        // 显示用户协议和隐私政策
-        showTermsAndPrivacy()
-    }
+
     
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }
     
-    @objc private func passwordDidChange() {
-        updatePasswordStrength()
-        updateRegisterButtonState()
-    }
-    
-    @objc private func textFieldDidChange() {
-        updateRegisterButtonState()
-    }
-    
     // MARK: - Private Methods
-    private func performRegistration(with credentials: RegisterCredentials) {
-        setLoading(true)
-        
-        Task {
-            do {
-                let result = try await authService.signUp(with: credentials)
-                await MainActor.run {
-                    setLoading(false)
-                    handleRegistrationSuccess(result)
-                }
-            } catch {
-                await MainActor.run {
-                    setLoading(false)
-                    handleRegistrationError(error)
-                }
-            }
+    private func handleRegisterResult(_ result: RegisterResult) {
+        switch result {
+        case .success:
+            // 发送注册成功通知
+            NotificationCenter.default.post(name: .userDidLogin, object: nil)
+            
+            // 显示成功消息
+            let alert = UIAlertController(title: "注册成功", message: "欢迎加入 Soul！", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "确定", style: .default) { _ in
+                // 返回到登录页面或主页面
+                self.navigationController?.popViewController(animated: true)
+            })
+            present(alert, animated: true)
+            
+        case .failure(let error):
+            showAlert(title: "注册失败", message: error)
         }
     }
     
-    private func handleRegistrationSuccess(_ result: AuthResult) {
-        // 注册成功，通知代理或发送通知
-        NotificationCenter.default.post(name: .userDidLogin, object: result.user)
-        
-        // 显示欢迎消息
-        let alert = UIAlertController(title: "注册成功", message: "欢迎加入 Soul！", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "开始使用", style: .default) { _ in
-            // 返回到主界面
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let window = windowScene.windows.first {
-                // 这里应该设置主界面的根视图控制器
-                // 暂时先dismiss当前界面
-                self.dismiss(animated: true)
-            }
-        })
-        present(alert, animated: true)
-    }
+
     
-    private func handleRegistrationError(_ error: Error) {
-        let authError = error as? AuthError ?? .unknown(error.localizedDescription)
-        showAlert(title: "注册失败", message: authError.localizedDescription ?? "未知错误")
-    }
+
     
     private func setLoading(_ isLoading: Bool) {
-        registerButton.isEnabled = !isLoading
         registerButton.setTitle(isLoading ? "" : "注册", for: .normal)
         
         if isLoading {
@@ -427,82 +338,16 @@ class RegisterViewController: BaseViewController {
             loadingIndicator.stopAnimating()
         }
         
-        displayNameTextField.isEnabled = !isLoading
-        emailTextField.isEnabled = !isLoading
+        usernameTextField.isEnabled = !isLoading
         passwordTextField.isEnabled = !isLoading
-        confirmPasswordTextField.isEnabled = !isLoading
-        termsCheckbox.isEnabled = !isLoading
+        nicknameTextField.isEnabled = !isLoading
+//        termsCheckbox.isEnabled = !isLoading
         loginButton.isEnabled = !isLoading
     }
     
-    private func updatePasswordStrength() {
-        guard let password = passwordTextField.text else {
-            passwordStrengthLabel.text = "密码强度："
-            passwordStrengthIndicator.backgroundColor = .systemGray5
-            return
-        }
-        
-        let strength = calculatePasswordStrength(password)
-        
-        switch strength {
-        case 0:
-            passwordStrengthLabel.text = "密码强度："
-            passwordStrengthIndicator.backgroundColor = .systemGray5
-        case 1:
-            passwordStrengthLabel.text = "密码强度：弱"
-            passwordStrengthIndicator.backgroundColor = .systemRed
-        case 2:
-            passwordStrengthLabel.text = "密码强度：中"
-            passwordStrengthIndicator.backgroundColor = .systemOrange
-        case 3:
-            passwordStrengthLabel.text = "密码强度：强"
-            passwordStrengthIndicator.backgroundColor = .systemGreen
-        default:
-            passwordStrengthLabel.text = "密码强度："
-            passwordStrengthIndicator.backgroundColor = .systemGray5
-        }
-    }
+
     
-    private func calculatePasswordStrength(_ password: String) -> Int {
-        if password.isEmpty { return 0 }
-        
-        var strength = 0
-        
-        // 长度检查
-        if password.count >= 6 { strength += 1 }
-        
-        // 包含数字
-        if password.rangeOfCharacter(from: .decimalDigits) != nil { strength += 1 }
-        
-        // 包含字母
-        if password.rangeOfCharacter(from: .letters) != nil { strength += 1 }
-        
-        // 包含特殊字符或长度超过8位
-        if password.count >= 8 || password.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted) != nil {
-            strength = min(strength + 1, 3)
-        }
-        
-        return strength
-    }
-    
-    private func updateRegisterButtonState() {
-        let email = emailTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let password = passwordTextField.text ?? ""
-        let confirmPassword = confirmPasswordTextField.text ?? ""
-        
-        let isValid = !email.isEmpty && 
-                     !password.isEmpty && 
-                     !confirmPassword.isEmpty && 
-                     termsCheckbox.isSelected
-        
-        registerButton.alpha = isValid ? 1.0 : 0.6
-    }
-    
-    private func showTermsAndPrivacy() {
-        let alert = UIAlertController(title: "用户协议和隐私政策", message: "这里应该显示完整的用户协议和隐私政策内容。", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
-        present(alert, animated: true)
-    }
+
     
     private func handleKeyboardShow(_ notification: Notification) {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
@@ -540,20 +385,18 @@ class RegisterViewController: BaseViewController {
 extension RegisterViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         switch textField {
-        case displayNameTextField:
-            emailTextField.becomeFirstResponder()
-        case emailTextField:
+        case usernameTextField:
             passwordTextField.becomeFirstResponder()
         case passwordTextField:
-            confirmPasswordTextField.becomeFirstResponder()
-        case confirmPasswordTextField:
+            nicknameTextField.becomeFirstResponder()
+        case nicknameTextField:
             textField.resignFirstResponder()
-            if registerButton.alpha == 1.0 {
-                registerButtonTapped()
-            }
+            viewModel.registerTrigger.accept(())
         default:
             textField.resignFirstResponder()
         }
         return true
     }
 }
+
+

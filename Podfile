@@ -22,6 +22,9 @@ target 'SoulScapes' do
   pod 'BetterSegmentedControl', '~> 2.0'
   pod 'ZLSwipeableViewSwift'
   
+  pod 'RxSwift'
+  pod 'RxCocoa'
+  
   pod 'LookinServer', :configurations => ['Debug']
 
 

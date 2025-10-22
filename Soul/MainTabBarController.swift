@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import SoulNetwork
 
 class MainTabBarController: UIViewController {
     
@@ -16,6 +17,7 @@ class MainTabBarController: UIViewController {
         setupUI()
         setupConstraints()
         setupInitialViewController()
+        setupTokenExpiryNotification()
     }
     
     private func setupUI() {
@@ -42,6 +44,55 @@ class MainTabBarController: UIViewController {
     private func setupInitialViewController() {
         // 默认显示首页
         showViewController(homeViewController, at: 0)
+    }
+    
+    // MARK: - Token Expiry Handling
+    
+    /// 设置token过期通知监听
+    private func setupTokenExpiryNotification() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTokenExpiry),
+            name: .tokenDidExpire,
+            object: nil
+        )
+    }
+    
+    /// 处理token过期通知
+    @objc private func handleTokenExpiry() {
+        print("🔒 MainTabBarController收到token过期通知")
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.navigateToLogin()
+        }
+    }
+    
+    /// 跳转到登录页面（纯代码）
+    private func navigateToLogin() {
+        let loginVC = LoginViewController()
+        let navigationController = UINavigationController(rootViewController: loginVC)
+        
+        // 获取当前窗口（优先使用当前视图所在的窗口，其次使用 keyWindow）
+        if let window = view.window {
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                window.rootViewController = navigationController
+            }, completion: nil)
+            print("✅ MainTabBarController已跳转到登录页面（纯代码）")
+        } else if let window = UIApplication.shared.connectedScenes
+                    .compactMap({ $0 as? UIWindowScene })
+                    .flatMap({ $0.windows })
+                    .first(where: { $0.isKeyWindow }) {
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+                window.rootViewController = navigationController
+            }, completion: nil)
+            print("✅ MainTabBarController已跳转到登录页面（纯代码，使用keyWindow）")
+        } else {
+            print("❌ MainTabBarController无法获取窗口进行跳转")
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func showViewController(_ viewController: UIViewController, at index: Int) {
